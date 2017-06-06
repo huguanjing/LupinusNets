@@ -1,14 +1,14 @@
 
 libray(ggplot2)
+library(vioplot)
 # place title in center
 theme_update(plot.title = element_text(hjust = 0.5), legend.position="bottom", axis.text.x = element_text(angle = 90, hjust = 1))
 
 
-## GO to folders with saved FC rdata
+## navigate to folders with saved FC rdata
 FCfiles<-grep(".rdata",list.files(),value=TRUE)
 FCfiles
 rm(sumFC)
-rm(sumCorr)
 for(file in FCfiles)
 {
     print(file)
@@ -105,6 +105,26 @@ library(GO.db)
 goterms = unlist(Term(GOTERM))
 AUCs$Term <- goterms[AUCs$id]
 write.table(AUCs,file="go.aucs.txt",row.names=FALSE,sep="\t")
+
+# AUCs<-read.table("go.aucs.txt",header=TRUE,sep="\t")
+# Wilcoxon Signed-Rank Test
+plot(AUCs[,2:4])
+source("~/Dropbox/Scripts/R/panel.cor.r")
+png("plotFC.corr.png")
+pairs(AUCs[,2:4],upper.panel=panel.cor, pch=20)
+vioplot(na.omit(AUCs$la),na.omit(AUCs$lm),na.omit(AUCs$ll), names=c("la","lm","ll"))
+dev.off()
+
+wilcox.test(AUCs$la, AUCs$ll, paired=TRUE)
+# p-value = 8.267e-07
+wilcox.test(AUCs$la, AUCs$lm, paired=TRUE)
+# p-value = 0.0805
+wilcox.test(AUCs$ll, AUCs$lm, paired=TRUE)
+# p-value = 8.258e-10
+
+m <- apply(AUCs[,2:4],1,min)
+AUCs[m>0.7&!is.na(m),]
+
 
 ######################################
 ## Highly connected KEGG categories ##
